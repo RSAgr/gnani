@@ -1,0 +1,32 @@
+# Python bytecode and test/tool caches
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Virtual environments and local Python tooling
+.venv/
+venv/
+env/
+
+# Local environment variables and credentials
+.env
+.env.*
+!.env.example
+
+# Haq's generated ledger and voice recordings (may contain personal data)
+/data/
+
+# Build/package output
+build/
+dist/
+*.egg-info/
+
+# Editor and operating-system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+Desktop.ini

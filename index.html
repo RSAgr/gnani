@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Haq · हक़ — every day of work, on record</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Teko:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cement:#D5D6D0; --cement-2:#C6C8C1; --chalk:#FBFBF8; --navy:#1E2A3A; --navy-2:#41506A;
+    --yellow:#F5C518; --red:#C8372D; --green:#2F7A4F; --line:#B7BAB2;
+    --display:"Teko","Hind",system-ui,sans-serif; --body:"Hind",system-ui,"Noto Sans Devanagari",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html{background:var(--cement)}
+  body{margin:0;color:var(--navy);font:400 17px/1.55 var(--body);min-height:100vh}
+  :focus-visible{outline:3px solid var(--navy);outline-offset:2px}
+  button{font:inherit;color:inherit;cursor:pointer}
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 24px 56px}
+
+  /* top bar */
+  .top{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:14px;border-bottom:2px solid var(--navy)}
+  .brand{display:flex;align-items:baseline;gap:12px}
+  .brand b{font:600 46px/0.9 var(--display);letter-spacing:.5px}
+  .brand span{font-size:15px;color:var(--navy-2)}
+  .who{display:flex;align-items:center;gap:10px;font-size:15px}
+  .ghost{background:transparent;border:1.5px solid var(--navy);border-radius:6px;padding:6px 12px;font-size:14px}
+  .ghost:hover{background:var(--navy);color:var(--chalk)}
+
+  /* main grid */
+  .grid{display:grid;grid-template-columns:1.25fr .95fr;gap:24px;margin-top:22px;align-items:start}
+  @media(max-width:900px){.grid{grid-template-columns:1fr}}
+  .grid>*{min-width:0}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .scroll table{min-width:640px}
+  a.ghost{color:var(--navy)}
+  @media(max-width:640px){
+    .wrap{padding:14px 14px 40px}
+    .top{flex-wrap:wrap}.brand{flex-direction:column;gap:2px}.brand b{font-size:40px}
+    .microw{flex-direction:column;align-items:flex-start}
+    .row{grid-template-columns:70px 1fr}.row .seal{grid-column:2;text-align:left}
+  }
+
+  /* the board: the one loud element */
+  .board{background:var(--yellow);border-radius:4px;padding:22px 26px 20px;position:relative;
+         box-shadow:inset 0 0 0 3px var(--navy)}
+  .board::before{content:"";position:absolute;inset:0 0 auto 0;height:12px;border-radius:4px 4px 0 0;
+         background:repeating-linear-gradient(135deg,var(--navy) 0 14px,var(--yellow) 14px 28px)}
+  .board .lbl{margin-top:8px;font-size:18px;font-weight:500}
+  .board .lbl small{font-size:14px;opacity:.75;margin-left:6px}
+  .due{font:600 clamp(64px,13vw,112px)/0.9 var(--display);margin:10px 0 12px;letter-spacing:-1px}
+  .facts{display:flex;flex-wrap:wrap;gap:6px 28px;font-size:15px}
+  .facts b{font:500 26px/1 var(--display)}
+  .gap{margin-top:14px;background:var(--navy);color:var(--chalk);border-radius:4px;padding:10px 14px;font-size:15px}
+  .gap b{color:var(--yellow);font:500 24px/1 var(--display)}
+
+  /* recorder */
+  .rec{background:var(--chalk);border-radius:4px;padding:22px;display:flex;flex-direction:column;gap:14px;border:1.5px solid var(--line)}
+  .rec h2{margin:0;font:500 30px/1 var(--display)}
+  .rec p{margin:0;color:var(--navy-2);font-size:15px}
+  .microw{display:flex;align-items:center;gap:18px}
+  .mic{width:112px;height:112px;flex:none;border-radius:50%;border:4px solid var(--navy);background:var(--yellow);
+       display:grid;place-items:center;transition:transform .12s}
+  .mic svg{width:44px;height:44px}
+  .mic:hover{transform:scale(1.03)}
+  .mic.on{background:var(--red);border-color:var(--red);color:var(--chalk);animation:ring 1.2s infinite}
+  .mic:disabled{opacity:.55;cursor:wait}
+  @keyframes ring{0%{box-shadow:0 0 0 0 rgba(200,55,45,.5)}100%{box-shadow:0 0 0 22px rgba(200,55,45,0)}}
+  @media (prefers-reduced-motion:reduce){.mic.on{animation:none}.mic{transition:none}}
+  .status{font-size:15px;min-height:24px}
+  .say{font-size:15px;color:var(--navy-2)}
+  .say q{display:block;color:var(--navy);font-weight:500;quotes:"“" "”";margin-top:2px}
+  .convo{display:flex;flex-direction:column;gap:8px}
+  .msg{border-left:4px solid var(--navy);padding:6px 12px;background:#F1F1EC}
+  .msg.bot{border-color:var(--yellow);background:#FFF8DA}
+  .msg .m{font-size:13px;color:var(--navy-2)}
+  .typed{display:flex;gap:8px}
+  .typed input{flex:1;min-width:0;border:1.5px solid var(--line);border-radius:6px;padding:9px 12px;font:inherit;font-size:15px;background:#fff}
+  .solid{background:var(--navy);color:var(--chalk);border:none;border-radius:6px;padding:9px 16px;font-size:15px}
+  .err{color:var(--red);font-size:14px}
+
+  /* sections */
+  h3{font:500 30px/1 var(--display);margin:34px 0 4px}
+  h3 small{font:400 15px var(--body);color:var(--navy-2);margin-left:8px}
+  .note{font-size:14px;color:var(--navy-2);margin:0 0 10px}
+
+  /* contractor register */
+  table{width:100%;border-collapse:collapse;background:var(--chalk);border:1.5px solid var(--line)}
+  th{font-weight:500;font-size:13px;color:var(--navy-2);text-align:left;padding:10px 12px;border-bottom:1.5px solid var(--navy)}
+  td{padding:12px;border-bottom:1px solid #E2E3DD;vertical-align:middle}
+  td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+  td.big{font:500 28px/1 var(--display)}
+  .name{font-weight:600;font-size:18px}
+  .rate-low{color:var(--red);font-weight:600}
+  .rate-ok{color:var(--green)}
+  .tiny{font-size:12px;color:var(--navy-2)}
+  .empty{padding:22px;text-align:center;color:var(--navy-2)}
+
+  /* record log */
+  .log{background:var(--chalk);border:1.5px solid var(--line)}
+  .row{display:grid;grid-template-columns:92px 1fr auto;gap:14px;padding:12px 14px;border-bottom:1px solid #E2E3DD;align-items:start}
+  .row:last-child{border-bottom:none}
+  .d{font:500 22px/1 var(--display)}
+  .d small{display:block;font:400 12px var(--body);color:var(--navy-2)}
+  .words{font-size:16px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+  .tag{font-size:12px;border:1px solid var(--line);border-radius:3px;padding:1px 7px;background:#F1F1EC}
+  .tag.pay{border-color:var(--green);color:var(--green)}
+  .tag.void{border-color:var(--red);color:var(--red)}
+  .seal{font-size:11px;color:var(--navy-2);text-align:right;font-variant-numeric:tabular-nums}
+  .play{background:none;border:1.5px solid var(--navy);border-radius:999px;padding:2px 10px;font-size:13px;margin-bottom:4px}
+  .chain{display:flex;align-items:center;gap:8px;font-size:14px;margin:8px 0 0}
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--green)}
+  .dot.bad{background:var(--red)}
+
+  footer{margin-top:40px;font-size:13px;color:var(--navy-2);border-top:1px solid var(--line);padding-top:14px}
+
+  dialog{border:none;border-radius:6px;padding:0;max-width:440px;width:92vw;color:var(--navy)}
+  dialog::backdrop{background:rgba(30,42,58,.55)}
+  .dlg{padding:22px}
+  .dlg h4{margin:0 0 12px;font:500 30px/1 var(--display)}
+  .dlg label{display:block;font-size:14px;margin:12px 0 4px}
+  .dlg input,.dlg select{width:100%;padding:8px 10px;border:1.5px solid var(--line);border-radius:6px;font:inherit}
+  .dlg .act{display:flex;justify-content:space-between;gap:8px;margin-top:18px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><b>हक़ Haq</b><span>हर दिन का काम, रिकॉर्ड पर। Every day of work, on record.</span></div>
+    <div class="who"><span id="worker"></span><button class="ghost" id="openSettings">सेटिंग्स</button></div>
+  </header>
+
+  <div class="grid">
+    <section>
+      <div class="board" aria-live="polite">
+        <div class="lbl">आपका कुल बकाया <small>Total wages owed to you</small></div>
+        <div class="due" id="due">₹0</div>
+        <div class="facts">
+          <span><b id="days">0</b> दिन काम</span>
+          <span><b id="earned">₹0</b> बनते हैं</span>
+          <span><b id="paid">₹0</b> मिले</span>
+        </div>
+        <div class="gap" id="gap" hidden></div>
+      </div>
+    </section>
+
+    <section class="rec">
+      <h2>आज का हिसाब बोलिए</h2>
+      <p>Tap and speak in Hindi or Hinglish. Tap again when done.</p>
+      <div class="microw">
+        <button class="mic" id="mic" aria-label="Record voice note (Space)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        </button>
+        <div class="say">जैसे:
+          <q>आज शर्मा जी की साइट पे काम किया, सात सौ तय हुआ था, चार सौ मिले</q>
+          <q>शर्मा जी का हिसाब सुनाओ</q>
+        </div>
+      </div>
+      <div class="status" id="status"></div>
+      <div class="convo" id="convo"></div>
+      <form class="typed" id="typed">
+        <input id="typedText" aria-label="Type instead" placeholder="या लिखिए: Verma ji ne 500 diye">
+        <button class="solid">दर्ज करें</button>
+      </form>
+      <div class="err" id="err" role="alert"></div>
+    </section>
+  </div>
+
+  <h3>ठेकेदार का हिसाब <small>Contractor accounts</small></h3>
+  <p class="note" id="mwNote"></p>
+  <div class="scroll"><table>
+    <thead><tr><th>ठेकेदार</th><th class="n">दिन</th><th class="n">रोज़ का रेट</th><th class="n">बनते हैं</th><th class="n">मिले</th><th class="n">बकाया</th><th></th></tr></thead>
+    <tbody id="accounts"></tbody>
+  </table></div>
+
+  <h3>रिकॉर्ड <small>Every note, sealed in order</small></h3>
+  <p class="note">हर आवाज़ की रिकॉर्डिंग और लिखा हुआ रिकॉर्ड जुड़ी हुई कड़ी में सुरक्षित है। कुछ भी मिटाया नहीं जाता, गलती का सुधार भी रिकॉर्ड होता है। Each record is SHA-256 chained to the one before it, so a changed entry is detected.</p>
+  <div class="log" id="log"></div>
+  <div class="chain" id="chain"></div>
+
+  <footer>Speech-to-text by Gnani Prisma. Voice by Gnani Timbre. Data stays on this device, apart from each voice clip sent to Gnani for transcription.</footer>
+</div>
+
+<dialog id="settings">
+  <form class="dlg" method="dialog" id="settingsForm">
+    <h4>सेटिंग्स</h4>
+    <label for="sName">आपका नाम (Worker name)</label>
+    <input id="sName" autocomplete="name">
+    <label for="sSkill">काम का स्तर (Skill)</label>
+    <select id="sSkill">
+      <option value="unskilled">अकुशल / Unskilled (helper, beldar)</option>
+      <option value="semi_skilled">अर्ध-कुशल / Semi-skilled</option>
+      <option value="skilled">कुशल / Skilled (mistri, carpenter)</option>
+      <option value="highly_skilled">अति-कुशल / Highly skilled</option>
+    </select>
+    <label for="sArea">न्यूनतम मज़दूरी (Minimum wage basis)</label>
+    <select id="sArea">
+      <option value="A">Central rate, Area A (big cities)</option>
+      <option value="B">Central rate, Area B</option>
+      <option value="C">Central rate, Area C</option>
+      <option value="custom">My state's rate (enter below)</option>
+    </select>
+    <label for="sCustom">State rate, ₹ per day</label>
+    <input id="sCustom" type="number" min="0" step="1" placeholder="e.g. 600">
+    <p class="tiny" id="mwSource"></p>
+    <div class="act">
+      <span>
+        <button type="button" class="ghost" id="demo">Load demo data</button>
+        <button type="button" class="ghost" id="reset">Erase all</button>
+      </span>
+      <button class="solid" id="saveSettings" value="save">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+const $ = s => document.querySelector(s);
+const inr = n => "₹" + Math.round(Number(n)).toLocaleString("en-IN");
+const esc = x => String(x ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const HI_DAYS = ["रवि","सोम","मंगल","बुध","गुरु","शुक्र","शनि"];
+let S = null;
+
+async function api(path, body, wav){
+  const r = await fetch(path, body===undefined ? {} : {method:"POST",
+    headers:{"Content-Type": wav ? "audio/wav" : "application/json"}, body: wav ? body : JSON.stringify(body)});
+  const ct = r.headers.get("content-type") || "";
+  if (!r.ok){ const j = ct.includes("json") ? await r.json() : {error: await r.text()}; throw new Error(j.error || r.status); }
+  return ct.includes("json") ? r.json() : r.blob();
+}
+
+function render(s){
+  S = s; const t = s.totals;
+  $("#worker").textContent = s.settings.worker_name || "";
+  $("#due").textContent = inr(t.due);
+  $("#days").textContent = (+t.days.toFixed(1)).toString();
+  $("#earned").textContent = inr(t.earned);
+  $("#paid").textContent = inr(t.paid);
+  const gap = $("#gap");
+  if (t.shortfall > 0){
+    gap.hidden = false;
+    gap.innerHTML = `तय रेट न्यूनतम मज़दूरी (${inr(s.min_wage)}/दिन) से कम है। इस हिसाब से <b>${inr(t.shortfall)}</b> और बनते हैं।`;
+  } else gap.hidden = true;
+
+  $("#mwNote").textContent = `न्यूनतम मज़दूरी: ${inr(s.min_wage)} प्रति दिन. ${s.settings.area === "custom" ? "Your state's rate, as entered." : s.min_wage_source + ". Your state's rate may differ; set it in Settings."}`;
+
+  $("#accounts").innerHTML = s.accounts.length ? s.accounts.map(a => `
+    <tr>
+      <td><div class="name">${esc(a.name)}</div><div class="tiny">${a.first ? fmtRange(a.first, a.last) : ""}</div></td>
+      <td class="n">${+a.days.toFixed(1)}${a.ot_hours ? `<div class="tiny">+${a.ot_hours} घंटे OT</div>` : ""}</td>
+      <td class="n">${a.rate ? `<span class="${a.below_min ? "rate-low" : "rate-ok"}">${inr(a.rate)}</span>${a.below_min ? `<div class="tiny">न्यूनतम से ${inr(s.min_wage - a.rate)} कम</div>` : ""}` : `<span class="tiny">रेट नहीं बताया</span>`}</td>
+      <td class="n">${inr(a.earned + a.ot_pay)}</td>
+      <td class="n">${inr(a.paid)}</td>
+      <td class="n big">${a.due < 0 ? `<span class="tiny">एडवांस</span> ${inr(-a.due)}` : inr(a.due)}</td>
+      <td class="n"><a class="ghost" style="text-decoration:none;display:inline-block" href="/statement?emp=${encodeURIComponent(a.key)}" target="_blank">हिसाब पत्र</a></td>
+    </tr>`).join("")
+    : `<tr><td colspan="7" class="empty">अभी कोई ठेकेदार नहीं। ऊपर बटन दबाकर आज का काम बोलिए।</td></tr>`;
+
+  $("#log").innerHTML = s.records.length ? s.records.map(r => {
+    const d = new Date(r.created);
+    const tags = r.entries.map(tagFor).join("");
+    return `<div class="row">
+      <div class="d">${d.getDate()} ${d.toLocaleString("en-IN",{month:"short"})}<small>${HI_DAYS[d.getDay()]}, ${d.toTimeString().slice(0,5)}</small></div>
+      <div><div class="words">“${esc(r.transcript)}”</div><div class="tags">${tags}</div></div>
+      <div class="seal">${r.audio_file ? `<button class="play" data-a="${esc(r.audio_file)}">▶ आवाज़</button><br>` : `<span>${r.source === "demo" ? "demo" : "typed"}</span><br>`}#${r.seq} ${r.hash.slice(0,10)}</div>
+    </div>`;}).join("")
+    : `<div class="empty">पहला रिकॉर्ड यहाँ दिखेगा।</div>`;
+
+  const c = s.chain;
+  $("#chain").innerHTML = c.ok
+    ? `<span class="dot"></span> ${c.records} रिकॉर्ड, सब सही क्रम में। Chain verified${c.fingerprint ? `, fingerprint ${c.fingerprint}` : ""}.`
+    : `<span class="dot bad"></span> रिकॉर्ड #${c.broken_at} में बदलाव पकड़ा गया। Chain broken at record ${c.broken_at}.`;
+  if (!s.key_set) $("#err").textContent = "Gnani API key is missing. Restart app.py and paste your key.";
+}
+
+function tagFor(e){
+  const nm = S.employers[e.employer] || "";
+  if (e.type === "work") return `<span class="tag">${esc(nm)}: ${e.days ? (e.days === .5 ? "आधा दिन" : e.days + " दिन") : ""}${e.ot_hours ? ` +${e.ot_hours} घंटे OT` : ""}</span>`;
+  if (e.type === "rate") return `<span class="tag">रेट ${inr(e.amount)}/दिन</span>`;
+  if (e.type === "payment") return `<span class="tag pay">${inr(e.amount)} मिले</span>`;
+  if (e.type === "void") return `<span class="tag void">पिछली एंट्री रद्द</span>`;
+  if (e.type === "note") return `<span class="tag void">${e.note === "not_paid" ? "पैसे नहीं मिले" : "काम नहीं मिला"}</span>`;
+  return "";
+}
+function fmtRange(a, b){
+  const f = x => new Date(x).toLocaleDateString("en-IN",{day:"numeric",month:"short"});
+  return a === b ? f(a) : `${f(a)} – ${f(b)}`;
+}
+
+function say(cls, text, meta){
+  const d = document.createElement("div");
+  d.className = "msg " + cls;
+  d.innerHTML = `${esc(text)}${meta ? `<div class="m">${esc(meta)}</div>` : ""}`;
+  const box = $("#convo"); box.prepend(d);
+  while (box.children.length > 4) box.lastChild.remove();
+}
+async function speak(text){
+  try { const b = await api("/api/tts", {text}); await new Audio(URL.createObjectURL(b)).play(); }
+  catch(e){ $("#err").textContent = "Gnani Timbre (voice): " + e.message; }
+}
+async function handle(res){
+  render(res);
+  const m = res.stt && res.stt.model !== "typed"
+    ? `Gnani ${res.stt.model || "Prisma"}${res.stt.context ? " + contractor-name hints" : ""}, ${res.stt.latency}s` : "typed";
+  say("you", res.transcript || "(कुछ सुनाई नहीं दिया)", m);
+  say("bot", res.result.reply);
+  speak(res.result.reply);
+  if (res.result.intent === "statement" && res.result.employer)
+    setTimeout(() => window.open("/statement?emp=" + encodeURIComponent(res.result.employer), "_blank"), 400);
+}
+
+/* ---- recording: mono 16 kHz WAV (Gnani REST accepts WAV up to 30 s) ---- */
+let ctx, stream, proc, src, chunks = [], on = false, timer;
+async function start(){
+  $("#err").textContent = "";
+  stream = await navigator.mediaDevices.getUserMedia({audio:{channelCount:1, echoCancellation:true, noiseSuppression:false}});
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+  src = ctx.createMediaStreamSource(stream);
+  proc = ctx.createScriptProcessor(4096, 1, 1);
+  chunks = [];
+  proc.onaudioprocess = e => chunks.push(new Float32Array(e.inputBuffer.getChannelData(0)));
+  src.connect(proc); proc.connect(ctx.destination);
+  on = true; $("#mic").classList.add("on"); $("#status").textContent = "सुन रहे हैं… बोलने के बाद फिर से दबाएँ";
+  timer = setTimeout(stop, 28000);
+}
+async function stop(){
+  clearTimeout(timer); if (!on) return; on = false;
+  proc.disconnect(); src.disconnect(); stream.getTracks().forEach(t => t.stop());
+  const rate = ctx.sampleRate; await ctx.close();
+  $("#mic").classList.remove("on"); $("#mic").disabled = true;
+  $("#status").textContent = "Gnani Prisma लिख रहा है…";
+  try { await handle(await api("/api/voice", wav(down(flat(chunks), rate, 16000), 16000), true)); }
+  catch(e){ $("#err").textContent = e.message; }
+  $("#mic").disabled = false; $("#status").textContent = "";
+}
+const flat = a => { const o = new Float32Array(a.reduce((n,c)=>n+c.length,0)); let i=0; for (const c of a){o.set(c,i); i+=c.length} return o; };
+function down(b, f, t){ if (t >= f) return b; const r=f/t, n=Math.floor(b.length/r), o=new Float32Array(n);
+  for (let i=0;i<n;i++){ const s=Math.floor(i*r), e=Math.min(b.length,Math.floor((i+1)*r)); let x=0; for(let j=s;j<e;j++) x+=b[j]; o[i]=x/Math.max(1,e-s);} return o; }
+function wav(x, rate){ const b=new ArrayBuffer(44+x.length*2), v=new DataView(b), w=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i))};
+  w(0,"RIFF");v.setUint32(4,36+x.length*2,true);w(8,"WAVE");w(12,"fmt ");v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,rate,true);v.setUint32(28,rate*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,"data");v.setUint32(40,x.length*2,true);
+  for(let i=0;i<x.length;i++){const s=Math.max(-1,Math.min(1,x[i]));v.setInt16(44+i*2,s<0?s*0x8000:s*0x7fff,true);} return new Blob([v],{type:"audio/wav"}); }
+
+$("#mic").onclick = () => on ? stop() : start().catch(e => $("#err").textContent = "Microphone: " + e.message);
+document.addEventListener("keydown", e => { if (e.code === "Space" && !/INPUT|SELECT|TEXTAREA|BUTTON/.test(e.target.tagName) && !$("#settings").open){ e.preventDefault(); $("#mic").click(); }});
+$("#typed").onsubmit = async e => { e.preventDefault(); const t = $("#typedText").value.trim(); if (!t) return;
+  $("#typedText").value = ""; try { await handle(await api("/api/text", {text:t})); } catch(err){ $("#err").textContent = err.message; } };
+$("#log").onclick = e => { const a = e.target.dataset.a; if (a) new Audio("/audio/" + a).play(); };
+
+/* settings */
+$("#openSettings").onclick = () => {
+  const st = S.settings; $("#sName").value = st.worker_name || ""; $("#sSkill").value = st.skill; $("#sArea").value = st.area;
+  $("#sCustom").value = st.custom_rate || ""; $("#mwSource").textContent = S.min_wage_source + ". Many private sites follow state rates; choose “My state's rate” if so.";
+  $("#settings").showModal();
+};
+$("#settingsForm").onsubmit = async () => render(await api("/api/settings", {worker_name:$("#sName").value.trim(),
+  skill:$("#sSkill").value, area:$("#sArea").value, custom_rate: $("#sCustom").value ? Number($("#sCustom").value) : null}));
+$("#demo").onclick = async () => { render(await api("/api/demo", {})); $("#settings").close(); };
+$("#reset").onclick = async e => { const b = e.target; if (!b.dataset.arm){ b.dataset.arm = 1; b.textContent = "Click again to erase"; return; }
+  render(await api("/api/reset", {})); $("#settings").close(); b.textContent = "Erase all"; delete b.dataset.arm; };
+
+api("/api/state").then(render);
+</script>
+</body>
+</html>

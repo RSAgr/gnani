@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>हिसाब पत्र · Statement of wages due</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Hind:wght@400;500;600&family=Teko:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--navy:#1E2A3A;--navy-2:#41506A;--yellow:#F5C518;--red:#C8372D;--line:#C9CBC4;--cement:#D5D6D0}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--cement);color:var(--navy);font:400 15px/1.5 "Hind",system-ui,sans-serif}
+  .bar{max-width:820px;margin:18px auto 0;display:flex;gap:8px;flex-wrap:wrap;padding:0 16px}
+  .bar button{font:inherit;font-size:14px;border:1.5px solid var(--navy);background:#fff;border-radius:6px;padding:7px 14px;cursor:pointer}
+  .bar button.main{background:var(--navy);color:#fff}
+  .bar span{align-self:center;font-size:13px;color:var(--navy-2)}
+  .sheet{max-width:820px;margin:14px auto 40px;background:#fff;padding:40px 46px;box-shadow:0 1px 0 var(--line)}
+  .head{display:flex;justify-content:space-between;align-items:flex-start;border-bottom:3px solid var(--navy);padding-bottom:12px}
+  h1{margin:0;font:600 40px/0.95 "Teko","Hind",system-ui,sans-serif}
+  h1 small{display:block;font:400 15px "Hind",system-ui,sans-serif;color:var(--navy-2);margin-top:4px}
+  .mark{font:600 30px/1 "Teko","Hind",system-ui,sans-serif;background:var(--yellow);padding:6px 10px 2px;border:2px solid var(--navy)}
+  .parties{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin:18px 0}
+  .parties div{border-left:3px solid var(--navy);padding-left:10px}
+  .k{font-size:12px;color:var(--navy-2)}
+  .v{font-size:17px;font-weight:600}
+  table{width:100%;border-collapse:collapse;margin:8px 0}
+  th{text-align:left;font-weight:500;font-size:12px;color:var(--navy-2);border-bottom:1.5px solid var(--navy);padding:6px 8px}
+  td{padding:7px 8px;border-bottom:1px solid #E4E5E0;vertical-align:top}
+  .n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .sum td{font-size:16px}
+  .sum tr.total td{border-top:2px solid var(--navy);border-bottom:none;font:600 30px/1.1 "Teko","Hind",system-ui,sans-serif}
+  .flag{border:2px solid var(--red);padding:10px 14px;margin:14px 0;font-size:14px}
+  .flag b{color:var(--red)}
+  h2{font:500 24px/1 "Teko","Hind",system-ui,sans-serif;margin:24px 0 4px}
+  .said{font-size:13px;color:var(--navy-2)}
+  .seal{font-size:11px;color:var(--navy-2);font-variant-numeric:tabular-nums}
+  .foot{margin-top:24px;border-top:1px solid var(--line);padding-top:10px;font-size:12px;color:var(--navy-2)}
+  .sign{display:grid;grid-template-columns:1fr 1fr;gap:40px;margin-top:40px}
+  .sign div{border-top:1px solid var(--navy);padding-top:4px;font-size:12px}
+  @media print{
+    body{background:#fff}.bar{display:none}.sheet{box-shadow:none;margin:0;padding:0;max-width:none}
+    @page{size:A4;margin:14mm}
+  }
+  @media(max-width:640px){.sheet{padding:22px}.parties{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="bar">
+  <button class="main" onclick="print()">Print / Save as PDF</button>
+  <button id="speak">ठेकेदार को सुनाएँ (Read aloud)</button>
+  <button id="copy">WhatsApp के लिए कॉपी करें</button>
+  <span id="msg"></span>
+</div>
+<main class="sheet" id="sheet"><p>Loading…</p></main>
+
+<script>
+const inr = n => "₹" + Math.round(Number(n)).toLocaleString("en-IN");
+const esc = x => String(x ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fd = x => new Date(x).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
+const emp = new URLSearchParams(location.search).get("emp");
+let D;
+
+fetch("/api/statement?emp=" + encodeURIComponent(emp)).then(r => r.json()).then(d => {
+  if (d.error){ document.getElementById("sheet").textContent = d.error; return; }
+  D = d; const a = d.account, mw = d.min_wage;
+  const rows = a.lines.filter(l => l.type !== "rate").map(l => {
+    let what = "", amt = "";
+    if (l.type === "work"){
+      what = (l.days === .5 ? "आधा दिन" : `${l.days} दिन`) + " काम" + (l.ot_hours ? `, ${l.ot_hours} घंटे ओवरटाइम` : "") + (l.rate ? ` @ ${inr(l.rate)}/दिन` : ", रेट नहीं बताया");
+      amt = inr(l.earned + (l.ot_pay || 0));
+    } else if (l.type === "payment"){ what = "भुगतान मिला (payment received)"; amt = "− " + inr(l.amount); }
+    else if (l.type === "note"){ what = "दर्ज: पैसे नहीं मिले (recorded: not paid)"; }
+    return `<tr><td class="n">${fd(l.date)}</td><td>${what}<div class="said">“${esc(l.said)}”</div></td>
+      <td class="n">${amt}</td><td class="seal">${l.audio ? "voice" : l.source}</td></tr>`;
+  }).join("");
+
+  document.title = `हिसाब पत्र · ${a.name}`;
+  document.getElementById("sheet").innerHTML = `
+    <div class="head">
+      <h1>हिसाब पत्र<small>Statement of wages due, prepared from the worker's own dated voice records</small></h1>
+      <div class="mark">हक़</div>
+    </div>
+    <div class="parties">
+      <div><div class="k">मज़दूर (Worker)</div><div class="v">${esc(d.settings.worker_name || "—")}</div></div>
+      <div><div class="k">ठेकेदार (Contractor)</div><div class="v">${esc(a.name)}</div></div>
+      <div><div class="k">अवधि (Period)</div><div class="v">${a.first ? fd(a.first) + " to " + fd(a.last) : "—"}</div></div>
+    </div>
+
+    <table class="sum">
+      <tr><td>काम के दिन (Days worked)</td><td class="n">${+a.days.toFixed(1)}</td></tr>
+      <tr><td>तय रोज़ का रेट (Agreed daily rate)</td><td class="n">${a.rate ? inr(a.rate) : "not stated"}</td></tr>
+      <tr><td>मज़दूरी बनती है (Wages earned)</td><td class="n">${inr(a.earned)}</td></tr>
+      ${a.ot_pay ? `<tr><td>ओवरटाइम, दोगुनी दर (Overtime at double rate, ${a.ot_hours} h)</td><td class="n">${inr(a.ot_pay)}</td></tr>` : ""}
+      <tr><td>मिल चुका (Already paid)</td><td class="n">− ${inr(a.paid)}</td></tr>
+      <tr class="total"><td>${a.due < 0 ? "एडवांस लिया (Advance taken)" : "बकाया (Balance due)"}</td><td class="n">${inr(Math.abs(a.due))}</td></tr>
+    </table>
+
+    ${a.below_min ? `<div class="flag"><b>न्यूनतम मज़दूरी से कम।</b> The agreed rate of ${inr(a.rate)}/day is below the minimum wage of ${inr(mw)}/day
+      (${esc(d.min_wage_source)}). At the minimum wage, a further <b>${inr(a.shortfall)}</b> would be payable for ${+a.days.toFixed(1)} days.</div>` : ""}
+
+    <h2>दिन-वार रिकॉर्ड <span style="font:400 13px Hind,system-ui,sans-serif;color:var(--navy-2)">Day-by-day record, with the worker's own words</span></h2>
+    <table><thead><tr><th class="n">Date</th><th>Entry</th><th class="n">Amount</th><th>Source</th></tr></thead><tbody>${rows}</tbody></table>
+
+    <div class="sign"><div>मज़दूर के हस्ताक्षर / अंगूठा (Worker)</div><div>ठेकेदार के हस्ताक्षर (Contractor)</div></div>
+
+    <div class="foot">
+      Generated ${new Date(d.generated).toLocaleString("en-IN")} by Haq. Records: ${d.chain.records}, hash chain ${d.chain.ok ? "verified" : "BROKEN at record " + d.chain.broken_at}${d.chain.fingerprint ? ", fingerprint " + d.chain.fingerprint : ""}.
+      Each entry was logged by the worker on the day, by voice, and sealed with SHA-256 so later changes are detectable; corrections are added, never deleted.
+      This statement is a record kept by the worker, not a legal judgment. It can support a conversation with the contractor, a union, or the labour department.
+    </div>`;
+});
+
+document.getElementById("speak").onclick = async () => {
+  const m = document.getElementById("msg"); m.textContent = "Gnani Timbre…";
+  try{
+    const r = await fetch("/api/tts", {method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({text: D.spoken})});
+    if (!r.ok) throw new Error((await r.json()).error);
+    await new Audio(URL.createObjectURL(await r.blob())).play(); m.textContent = "";
+  } catch(e){ m.textContent = e.message; }
+};
+document.getElementById("copy").onclick = async () => {
+  const a = D.account;
+  const t = `*हिसाब पत्र* (Haq)\nमज़दूर: ${D.settings.worker_name || "-"}\nठेकेदार: ${a.name}\nअवधि: ${fd(a.first)} – ${fd(a.last)}\n` +
+    `काम: ${+a.days.toFixed(1)} दिन @ ${a.rate ? inr(a.rate) : "?"}/दिन = ${inr(a.earned + a.ot_pay)}\nमिले: ${inr(a.paid)}\n*बकाया: ${inr(a.due)}*` +
+    (a.below_min ? `\nन्यूनतम मज़दूरी ${inr(D.min_wage)}/दिन के हिसाब से ${inr(a.shortfall)} और बनते हैं।` : "") +
+    `\nRecord fingerprint: ${D.chain.fingerprint || "-"}`;
+  await navigator.clipboard.writeText(t); document.getElementById("msg").textContent = "Copied.";
+};
+</script>
+</body>
+</html>
